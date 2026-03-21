@@ -77,6 +77,18 @@ class ControlePagamentos:
 
         print("-----------------------------")
         print(f"Total arrecadado: R$ {total:.2f}")
+        print(f"Quantidade de pagamentos: {self.contar_pagamentos()}")
+
+    def contar_pagamentos(self):
+
+        atual = self.inicio
+        contador = 0
+
+        while atual is not None:
+            contador += 1
+            atual = atual.proximo
+
+        return contador
 
 
 # =========================

@@ -92,8 +92,10 @@ class Estoque:
 
         if quantidade == 0:
             print("Venda realizada.")
+            return True
         else:
             print("Estoque insuficiente.")
+            return False
 
     # listar estoque
     def listar_estoque(self):

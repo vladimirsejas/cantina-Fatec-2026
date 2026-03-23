@@ -74,8 +74,10 @@ class RegistroConsumo:
 # =============================================================================
 
 class Estoque:
+
     def __init__(self):
         self.inicio = None
+
 
     def adicionar_lote(self, novo_lote):
 
@@ -91,6 +93,7 @@ class Estoque:
 
         novo_lote.proximo = atual.proximo
         atual.proximo = novo_lote
+
 
     def baixar_estoque(self, nome_produto, qtd):
 
@@ -116,6 +119,7 @@ class Estoque:
 
         return True
 
+
     def get_saldo(self, nome_produto):
 
         total = 0
@@ -132,17 +136,19 @@ class Estoque:
 
 
 # =============================================================================
-# SISTEMA PRINCIPAL DA CANTINA
+# SISTEMA PRINCIPAL
 # =============================================================================
 
 class SistemaCantina:
 
     def __init__(self, estoque):
+
         self.estoque = estoque
         self.historico_pagamentos = None
         self.historico_consumos = None
         self.contador_pgto = 0
         self.contador_consumo = 0
+
 
     def realizar_venda(self, nome, categoria, curso, nome_prod, qtd):
 
@@ -152,6 +158,7 @@ class SistemaCantina:
 
             valor_total = produto.preco_venda * qtd
 
+            # pagamento
             self.contador_pgto += 1
             pgto = Pagamento(nome, categoria, curso, valor_total)
 
@@ -159,6 +166,7 @@ class SistemaCantina:
             reg_pgto.proximo = self.historico_pagamentos
             self.historico_pagamentos = reg_pgto
 
+            # consumo
             self.contador_consumo += 1
             cons = Consumo(nome, produto, qtd, valor_total)
 
@@ -169,6 +177,7 @@ class SistemaCantina:
             return True
 
         return False
+
 
     def _buscar_produto(self, nome):
 
@@ -182,6 +191,56 @@ class SistemaCantina:
             atual = atual.proximo
 
         return None
+
+
+    # =========================
+    # RELATÓRIO DE VENDAS
+    # =========================
+    def relatorio_vendas(self):
+
+        print("\n===== RELATÓRIO DE VENDAS =====")
+
+        atual = self.historico_pagamentos
+
+        total = 0
+
+        while atual:
+
+            pg = atual.pagamento
+
+            print(
+                f"{pg.nome_pagador} | {pg.categoria} | "
+                f"{pg.curso} | R$ {pg.valor_pago:.2f}"
+            )
+
+            total += pg.valor_pago
+
+            atual = atual.proximo
+
+        print("-----------------------------")
+        print(f"TOTAL DE VENDAS: R$ {total:.2f}")
+
+
+    # =========================
+    # RELATÓRIO DE CONSUMO
+    # =========================
+    def relatorio_consumo(self):
+
+        print("\n===== RELATÓRIO DE CONSUMO =====")
+
+        atual = self.historico_consumos
+
+        while atual:
+
+            consumo = atual.consumo
+
+            print(
+                f"{consumo.nome_consumidor} | "
+                f"{consumo.quantidade}x {consumo.produto.nome} | "
+                f"R$ {consumo.valor_total:.2f}"
+            )
+
+            atual = atual.proximo
 
 
 # =============================================================================
@@ -199,7 +258,6 @@ def salvar_dados(sistema, arquivo="cantina.pkl"):
 def carregar_dados(arquivo="cantina.pkl"):
 
     try:
-
         with open(arquivo, "rb") as f:
             return pickle.load(f)
 
@@ -208,10 +266,10 @@ def carregar_dados(arquivo="cantina.pkl"):
 
 
 # =============================================================================
-# POPULAÇÃO AUTOMÁTICA COM FAKER
+# GERAÇÃO AUTOMÁTICA COM FAKER
 # =============================================================================
 
-def popular_com_faker(sistema, qtd_vendas=5):
+def popular_com_faker(sistema, qtd_vendas=15):
 
     fake = Faker("pt_BR")
 
@@ -247,7 +305,6 @@ if __name__ == "__main__":
         print("Iniciando novo sistema...")
 
         estoque = Estoque()
-
         sistema = SistemaCantina(estoque)
 
         hitt = Produto("Hitt Nuts", 1.50, 3.00)
@@ -256,20 +313,14 @@ if __name__ == "__main__":
         estoque.adicionar_lote(Lote(1, hitt, date.today(), date(2026, 12, 31), 50))
         estoque.adicionar_lote(Lote(2, pao, date.today(), date(2026, 6, 15), 30))
 
-        popular_com_faker(sistema, 10)
+        popular_com_faker(sistema, 15)
 
     else:
 
         print("Sistema carregado do arquivo cantina.pkl")
 
-    print("\n===== RELATÓRIO FINAL DE CONSUMOS =====")
 
-    atual = sistema.historico_consumos
-
-    while atual:
-
-        print(atual)
-
-        atual = atual.proximo
+    sistema.relatorio_vendas()
+    sistema.relatorio_consumo()
 
     salvar_dados(sistema)

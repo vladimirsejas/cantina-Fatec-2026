@@ -2,6 +2,7 @@ import pickle
 import random
 from datetime import datetime, date
 from faker import Faker
+from tabulate import tabulate
 
 
 # =============================================================================
@@ -60,14 +61,6 @@ class RegistroConsumo:
         self.consumo = consumo
         self.proximo = None
 
-    def __str__(self):
-        return (
-            f"Consumo ID: {self.id_consumo} | "
-            f"{self.consumo.nome_consumidor} | "
-            f"{self.consumo.quantidade}x {self.consumo.produto.nome} | "
-            f"R$ {self.consumo.valor_total:.2f}"
-        )
-
 
 # =============================================================================
 # CONTROLE DE ESTOQUE
@@ -77,7 +70,6 @@ class Estoque:
 
     def __init__(self):
         self.inicio = None
-
 
     def adicionar_lote(self, novo_lote):
 
@@ -110,7 +102,6 @@ class Estoque:
                 if atual.quantidade >= restante:
                     atual.quantidade -= restante
                     restante = 0
-
                 else:
                     restante -= atual.quantidade
                     atual.quantidade = 0
@@ -126,10 +117,8 @@ class Estoque:
         atual = self.inicio
 
         while atual:
-
             if atual.produto.nome == nome_produto:
                 total += atual.quantidade
-
             atual = atual.proximo
 
         return total
@@ -193,58 +182,76 @@ class SistemaCantina:
         return None
 
 
-    # =========================
-    # RELATÓRIO DE VENDAS
-    # =========================
+    # =============================================================================
+    # RELATÓRIO DE VENDAS (COM TABELA)
+    # =============================================================================
+
     def relatorio_vendas(self):
 
         print("\n===== RELATÓRIO DE VENDAS =====")
 
         atual = self.historico_pagamentos
-
+        tabela = []
         total = 0
 
         while atual:
 
             pg = atual.pagamento
 
-            print(
-                f"{pg.nome_pagador} | {pg.categoria} | "
-                f"{pg.curso} | R$ {pg.valor_pago:.2f}"
-            )
+            tabela.append([
+                pg.nome_pagador,
+                pg.categoria,
+                pg.curso,
+                f"R$ {pg.valor_pago:.2f}"
+            ])
 
             total += pg.valor_pago
-
             atual = atual.proximo
 
-        print("-----------------------------")
-        print(f"TOTAL DE VENDAS: R$ {total:.2f}")
+        if tabela:
+            print(tabulate(
+                tabela,
+                headers=["Nome", "Categoria", "Curso", "Valor"],
+                tablefmt="grid"
+            ))
+
+        print("\nTOTAL DE VENDAS: R$", round(total, 2))
 
 
-    # =========================
+    # =============================================================================
     # RELATÓRIO DE CONSUMO
-    # =========================
+    # =============================================================================
+
     def relatorio_consumo(self):
 
         print("\n===== RELATÓRIO DE CONSUMO =====")
 
         atual = self.historico_consumos
+        tabela = []
 
         while atual:
 
             consumo = atual.consumo
 
-            print(
-                f"{consumo.nome_consumidor} | "
-                f"{consumo.quantidade}x {consumo.produto.nome} | "
+            tabela.append([
+                consumo.nome_consumidor,
+                consumo.produto.nome,
+                consumo.quantidade,
                 f"R$ {consumo.valor_total:.2f}"
-            )
+            ])
 
             atual = atual.proximo
 
+        if tabela:
+            print(tabulate(
+                tabela,
+                headers=["Consumidor", "Produto", "Qtd", "Valor"],
+                tablefmt="grid"
+            ))
+
 
 # =============================================================================
-# PERSISTÊNCIA COM PICKLE
+# PERSISTÊNCIA
 # =============================================================================
 
 def salvar_dados(sistema, arquivo="cantina.pkl"):
@@ -260,13 +267,12 @@ def carregar_dados(arquivo="cantina.pkl"):
     try:
         with open(arquivo, "rb") as f:
             return pickle.load(f)
-
     except FileNotFoundError:
         return None
 
 
 # =============================================================================
-# GERAÇÃO AUTOMÁTICA COM FAKER
+# FAKER
 # =============================================================================
 
 def popular_com_faker(sistema, qtd_vendas=15):
@@ -275,21 +281,16 @@ def popular_com_faker(sistema, qtd_vendas=15):
 
     produtos = ["Hitt Nuts", "Pão de Mel"]
 
-    print(f"\nGerando {qtd_vendas} vendas automáticas...")
+    print(f"\nGerando {qtd_vendas} vendas automáticas...\n")
 
     for _ in range(qtd_vendas):
 
         nome = fake.name()
-
         categoria = random.choice(["Aluno", "Professor", "Servidor"])
-
         curso = random.choice(["IA", "ESG"])
-
         produto = random.choice(produtos)
 
         sistema.realizar_venda(nome, categoria, curso, produto, 1)
-
-        print(f"{nome} comprou {produto}")
 
 
 # =============================================================================
@@ -316,9 +317,7 @@ if __name__ == "__main__":
         popular_com_faker(sistema, 15)
 
     else:
-
         print("Sistema carregado do arquivo cantina.pkl")
-
 
     sistema.relatorio_vendas()
     sistema.relatorio_consumo()

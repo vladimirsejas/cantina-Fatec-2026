@@ -4,7 +4,9 @@ from datetime import date
 # Classe Produto
 # =========================
 class Produto:
+
     def __init__(self, nome, preco_compra, preco_venda):
+
         self.nome = nome
         self.preco_compra = preco_compra
         self.preco_venda = preco_venda
@@ -14,18 +16,25 @@ class Produto:
 # Classe Lote (Nó da Lista Encadeada)
 # =========================
 class Lote:
+
     def __init__(self, id_lote, produto, data_compra, data_validade, quantidade):
+
         self.id_lote = id_lote
         self.produto = produto
         self.data_compra = data_compra
         self.data_validade = data_validade
         self.quantidade = quantidade
-        self.proximo = None  # ponteiro para o próximo lote
+
+        self.proximo = None
+
 
     def __str__(self):
+
         return (
-            f"Lote {self.id_lote} | Produto: {self.produto.nome} | "
-            f"Qtd: {self.quantidade} | Validade: {self.data_validade}"
+            f"Lote {self.id_lote} | "
+            f"Produto: {self.produto.nome} | "
+            f"Qtd: {self.quantidade} | "
+            f"Validade: {self.data_validade}"
         )
 
 
@@ -33,18 +42,24 @@ class Lote:
 # Classe Estoque (Lista Encadeada)
 # =========================
 class Estoque:
+
     def __init__(self):
-        self.inicio = None  # cabeça da lista
+
+        self.inicio = None
+
 
     # inserir lote mantendo ordem por validade
     def adicionar_lote(self, novo_lote):
 
         if self.inicio is None or novo_lote.data_validade < self.inicio.data_validade:
+
             novo_lote.proximo = self.inicio
             self.inicio = novo_lote
             return
 
+
         atual = self.inicio
+
 
         while (
             atual.proximo is not None
@@ -52,8 +67,10 @@ class Estoque:
         ):
             atual = atual.proximo
 
+
         novo_lote.proximo = atual.proximo
         atual.proximo = novo_lote
+
 
     # editar quantidade de um lote
     def editar_quantidade(self, id_lote, nova_quantidade):
@@ -63,15 +80,18 @@ class Estoque:
         while atual is not None:
 
             if atual.id_lote == id_lote:
+
                 atual.quantidade = nova_quantidade
                 print(f"Lote {id_lote}: quantidade atualizada para {nova_quantidade}.")
                 return
 
             atual = atual.proximo
 
+
         print("Lote não encontrado.")
 
-    # vender produto (prioriza lotes mais antigos)
+
+    # vender produto
     def vender_produto(self, nome_produto, quantidade):
 
         atual = self.inicio
@@ -81,19 +101,26 @@ class Estoque:
             if atual.produto.nome == nome_produto and atual.quantidade > 0:
 
                 if atual.quantidade >= quantidade:
+
                     atual.quantidade -= quantidade
                     quantidade = 0
 
                 else:
+
                     quantidade -= atual.quantidade
                     atual.quantidade = 0
 
             atual = atual.proximo
 
+
         if quantidade == 0:
+
             print("Venda realizada.")
+
         else:
+
             print("Estoque insuficiente.")
+
 
     # listar estoque
     def listar_estoque(self):
@@ -103,15 +130,18 @@ class Estoque:
         atual = self.inicio
 
         while atual is not None:
+
             print(atual)
+
             atual = atual.proximo
 
 
 
 # =========================
-# Simulação do sistema
+# SIMULAÇÃO DO SISTEMA
 # =========================
 if __name__ == "__main__":
+
 
     # =========================
     # PRODUTOS
@@ -135,6 +165,7 @@ if __name__ == "__main__":
     agua = Produto("Água Mineral", 1.50, 3.00)
     h2o = Produto("H2O", 3.50, 5.50)
     energetico = Produto("Energético", 5.00, 8.00)
+
 
     # =========================
     # LOTES
@@ -160,6 +191,7 @@ if __name__ == "__main__":
     lote14 = Lote(14, agua, date(2026,3,10), date(2026,6,1), 50)
     lote15 = Lote(15, h2o, date(2026,3,10), date(2026,6,1), 20)
     lote16 = Lote(16, energetico, date(2026,3,10), date(2026,6,1), 15)
+
 
     # =========================
     # CRIAR ESTOQUE
@@ -188,34 +220,9 @@ if __name__ == "__main__":
     estoque.adicionar_lote(lote15)
     estoque.adicionar_lote(lote16)
 
-    # =========================
-    # MOSTRAR ESTOQUE INICIAL
-    # =========================
-
-    print("\n===== ESTOQUE INICIAL =====")
-    estoque.listar_estoque()
 
     # =========================
-    # EDITAR QUANTIDADE
+    # MOSTRAR ESTOQUE
     # =========================
 
-    print("\n===== EDITANDO QUANTIDADE =====")
-    estoque.editar_quantidade(1, 48)
-    estoque.editar_quantidade(2, 18)
-
-    # =========================
-    # SIMULAR VENDAS
-    # =========================
-
-    print("\n===== SIMULANDO VENDAS =====")
-    estoque.vender_produto("Hitt Nuts", 5)
-    estoque.vender_produto("Pão de Mel", 3)
-    estoque.vender_produto("Coca-Cola Lata", 2)
-    estoque.vender_produto("KitKat", 1)
-
-    # =========================
-    # MOSTRAR ESTOQUE FINAL
-    # =========================
-
-    print("\n===== ESTOQUE APÓS VENDAS =====")
     estoque.listar_estoque()

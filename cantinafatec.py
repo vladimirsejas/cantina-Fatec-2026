@@ -339,4 +339,5 @@ if __name__ == "__main__":
         elif op == "0":
 
             salvar_dados(sistema)
-            break1
+            break
+        

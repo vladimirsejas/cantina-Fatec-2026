@@ -283,24 +283,3 @@ class SistemaCantina:
             atual = atual.proximo
 
 
-# =========================
-# Simulação
-# =========================
-if __name__ == "__main__":
-
-    estoque = Estoque()
-    sistema = SistemaCantina(estoque)
-
-    hittnuts = Produto("Hitt Nuts", 1.50, 3.00)
-
-    lote1 = Lote(1, hittnuts, date(2026,3,1), date(2026,4,1), 10)
-    lote2 = Lote(2, hittnuts, date(2026,3,10), date(2026,5,1), 20)
-
-    estoque.adicionar_lote(lote1)
-    estoque.adicionar_lote(lote2)
-
-    sistema.realizar_venda("Vladi", "Aluno", "IA", "Hitt Nuts", 5)
-
-    print("\nSaldo restante:", estoque.get_saldo("Hitt Nuts"))
-
-    sistema.listar_consumos()

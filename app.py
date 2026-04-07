@@ -102,6 +102,30 @@ class RegistroConsumo:
 
 
 # =========================
+# Classe Pagamento
+# =========================
+class Pagamento:
+    def __init__(self, nome_pagador, categoria, curso, valor_pago):
+        self.nome_pagador = nome_pagador
+        self.categoria = categoria
+        self.curso = curso
+        self.valor_pago = valor_pago
+        self.data_hora = datetime.now()
+
+
+# =========================
+# Classe Consumo
+# =========================
+class Consumo:
+    def __init__(self, nome_consumidor, produto, quantidade, valor_total):
+        self.nome_consumidor = nome_consumidor
+        self.produto = produto
+        self.quantidade = quantidade
+        self.valor_total = valor_total
+        self.data = datetime.now()
+
+
+# =========================
 # ESTOQUE
 # =========================
 

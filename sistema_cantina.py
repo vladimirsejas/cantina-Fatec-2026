@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from controlepgto import ControlePagamentos
 
 # =========================
 # Classe Produto
@@ -148,7 +149,10 @@ class SistemaCantina:
     def __init__(self, estoque):
 
         self.estoque = estoque
-
+        
+        from controlepgto import ControlePagamentos
+        
+        self.pagamentos = ControlePagamentos()
         self.historico_pagamentos = None
         self.historico_consumos = None
 
@@ -211,7 +215,19 @@ class SistemaCantina:
 
             print(atual)
 
+            p = atual.consumo
+
+            print(
+                f"ID: {atual.id_consumo} | "
+                f"Nome: {p.nome_consumidor} | "
+                f"Produto: {p.produto.nome} | "
+                f"Qtd: {p.quantidade} | "
+                f"Total: R$ {p.valor_total:.2f} | "
+                f"Data: {p.data}"
+            )
+
             atual = atual.proximo
+
 
 
 # =========================

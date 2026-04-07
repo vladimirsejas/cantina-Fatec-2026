@@ -229,6 +229,38 @@ class SistemaCantina:
             atual = atual.proximo
 
 
+    def relatorio_vendas(self):
+
+        atual = self.historico_pagamentos
+
+        print("\n===== RELATÓRIO DE VENDAS =====")
+
+        if atual is None:
+            print("Nenhuma venda registrada.")
+            return
+
+        total = 0
+
+        while atual:
+
+            p = atual.pagamento
+
+            print(
+                f"ID: {atual.id_transacao} | "
+                f"Nome: {p.nome_pagador} | "
+                f"Categoria: {p.categoria} | "
+                f"Curso: {p.curso} | "
+                f"Valor: R$ {p.valor_pago:.2f} | "
+                f"Data: {p.data_hora}"
+            )
+
+            total += p.valor_pago
+
+            atual = atual.proximo
+
+        print(f"\nTotal arrecadado: R$ {round(total, 2)}")
+
+
 
 # =========================
 # Simulação

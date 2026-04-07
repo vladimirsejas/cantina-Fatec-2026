@@ -261,6 +261,27 @@ class SistemaCantina:
         print(f"\nTotal arrecadado: R$ {round(total, 2)}")
 
 
+    def listar_estoque(self):
+
+        atual = self.estoque.inicio
+
+        print("\n===== ESTOQUE =====")
+
+        if atual is None:
+            print("Estoque vazio.")
+            return
+
+        while atual:
+
+            print(
+                f"Lote {atual.id_lote} | "
+                f"Produto: {atual.produto.nome} | "
+                f"Qtd: {atual.quantidade} | "
+                f"Validade: {atual.data_validade}"
+            )
+
+            atual = atual.proximo
+
 
 # =========================
 # Simulação

@@ -1,5 +1,4 @@
-# cantina-Fatec-2026
-# Sistema de Cantina – Projeto FATEC
+# cantina-Fatec-2026 - Projeto FATEC
 ## Estrutura do Projeto
 
 - main.py → ponto de entrada do sistema

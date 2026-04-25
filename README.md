@@ -1,15 +1,41 @@
 # cantina-Fatec-2026
 # Sistema de Cantina – Projeto FATEC
+## Estrutura do Projeto
 
-Este projeto foi desenvolvido como trabalho para a disciplina de Estrutura de Dados e Programação Orientada a Objetos.
+- main.py → ponto de entrada do sistema
+- sistema.py → regras de negócio (vendas e relatórios)
+- estoque.py → controle de estoque com lista encadeada (FIFO)
+- modelos.py → classes do sistema (Produto, Lote, Pagamento, Consumo)
 
-O objetivo do sistema é simular o funcionamento de uma cantina, controlando o estoque de produtos e registrando as vendas realizadas.
+## Conceitos Utilizados
 
-O sistema utiliza listas encadeadas para armazenar os lotes de produtos no estoque e também para registrar os pagamentos e os consumos.
+- Programação Orientada a Objetos (POO)
+- Estrutura de Dados: Lista Encadeada
+- FIFO (First In, First Out)
+- Persistência com pickle
 
-Entre as funcionalidades do sistema estão o controle de estoque por lotes, registro de vendas, geração de relatórios de vendas e de consumo, persistência de dados utilizando pickle e geração de dados de teste utilizando Faker.
+## Funcionalidades
 
-Durante o desenvolvimento foram utilizados conceitos de Programação Orientada a Objetos, estrutura de dados com lista encadeada, encapsulamento, manipulação de datas com datetime e serialização de dados com pickle.
+- Cadastro de produtos em lote
+- Controle de estoque
+- Venda de produtos
+- Relatórios de vendas e lucro
+- Alerta de produtos próximos do vencimento
 
-Autor: Vladimir Sejas  
-Curso: Inteligência Artificial – FATEC
+ ## Bibliotecas utilizadas
+
+O sistema foi desenvolvido utilizando bibliotecas padrão da linguagem Python e uma biblioteca externa para melhoria da visualização no terminal.
+
+Bibliotecas padrão do Python
+datetime
+Utilizada para manipulação de datas e horários, sendo aplicada no controle de validade dos produtos e no registro das operações do sistema.
+pickle
+Utilizada para serialização de dados, permitindo salvar e recuperar o estado do sistema em arquivos, garantindo persistência das informações entre execuções.
+Biblioteca externa
+tabulate
+Utilizada para exibição de dados em formato de tabela no terminal, proporcionando melhor organização e legibilidade das informações de estoque e relatórios.
+Instalação da dependência externa
+
+Para instalar a biblioteca necessária:
+
+pip install tabulate

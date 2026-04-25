@@ -1,228 +1,179 @@
-from datetime import date
-
-# =========================
-# Classe Produto
-# =========================
-class Produto:
-
-    def __init__(self, nome, preco_compra, preco_venda):
-
-        self.nome = nome
-        self.preco_compra = preco_compra
-        self.preco_venda = preco_venda
+  from datetime import date
+from tabulate import tabulate
+from modelos import Lote
 
 
 # =========================
-# Classe Lote (Nó da Lista Encadeada)
+# Classe Estoque (lista encadeada com FIFO)
 # =========================
-class Lote:
 
-    def __init__(self, id_lote, produto, data_compra, data_validade, quantidade):
-
-        self.id_lote = id_lote
-        self.produto = produto
-        self.data_compra = data_compra
-        self.data_validade = data_validade
-        self.quantidade = quantidade
-
-        self.proximo = None
-
-
-    def __str__(self):
-
-        return (
-            f"Lote {self.id_lote} | "
-            f"Produto: {self.produto.nome} | "
-            f"Qtd: {self.quantidade} | "
-            f"Validade: {self.data_validade}"
-        )
-
-
-# =========================
-# Classe Estoque (Lista Encadeada)
-# =========================
 class Estoque:
 
     def __init__(self):
+        self.inicio = None          # cabeça da lista encadeada
+        self._contador_lotes = 0    # gerador de IDs únicos
 
-        self.inicio = None
+    # -------------------------------------------------------
+    # UTILITÁRIO: próximo ID de lote
+    # -------------------------------------------------------
+    def proximo_id(self):
+        self._contador_lotes += 1
+        return self._contador_lotes
 
-
-    # inserir lote mantendo ordem por validade
+    # -------------------------------------------------------
+    # INSERÇÃO: mantém lista ordenada por data de validade
+    # (lotes que vencem primeiro ficam no início → FIFO)
+    # -------------------------------------------------------
     def adicionar_lote(self, novo_lote):
 
+        # lista vazia OU novo lote vence antes do primeiro
         if self.inicio is None or novo_lote.data_validade < self.inicio.data_validade:
-
             novo_lote.proximo = self.inicio
             self.inicio = novo_lote
             return
 
-
+        # percorre até achar a posição certa
         atual = self.inicio
-
-
-        while (
-            atual.proximo is not None
-            and atual.proximo.data_validade < novo_lote.data_validade
-        ):
+        while atual.proximo and atual.proximo.data_validade <= novo_lote.data_validade:
             atual = atual.proximo
 
-
+        # encadeia o novo nó
         novo_lote.proximo = atual.proximo
         atual.proximo = novo_lote
 
+    # -------------------------------------------------------
+    # FIFO: baixa estoque consumindo os lotes mais antigos
+    # -------------------------------------------------------
+    def baixar_estoque(self, nome_produto, qtd):
 
-    # editar quantidade de um lote
+        if self.get_saldo(nome_produto) < qtd:
+            return False
+
+        restante = qtd
+        atual = self.inicio
+
+        while atual and restante > 0:
+            if atual.produto.nome == nome_produto and atual.quantidade > 0:
+                if atual.quantidade >= restante:
+                    atual.quantidade -= restante
+                    restante = 0
+                else:
+                    restante -= atual.quantidade
+                    atual.quantidade = 0
+            atual = atual.proximo
+
+        return True
+
+    # -------------------------------------------------------
+    # SALDO: total disponível de um produto
+    # -------------------------------------------------------
+    def get_saldo(self, nome_produto):
+
+        total = 0
+        atual = self.inicio
+
+        while atual:
+            if atual.produto.nome == nome_produto:
+                total += atual.quantidade
+            atual = atual.proximo
+
+        return total
+
+    # -------------------------------------------------------
+    # EDITAR: atualiza quantidade de um lote pelo ID
+    # -------------------------------------------------------
     def editar_quantidade(self, id_lote, nova_quantidade):
 
+        if nova_quantidade < 0:
+            print("Quantidade inválida.")
+            return
+
         atual = self.inicio
-
-        while atual is not None:
-
+        while atual:
             if atual.id_lote == id_lote:
-
                 atual.quantidade = nova_quantidade
-                print(f"Lote {id_lote}: quantidade atualizada para {nova_quantidade}.")
+                print(f"Lote {id_lote} atualizado para {nova_quantidade} unidades.")
                 return
-
             atual = atual.proximo
 
+        print(f"Lote {id_lote} não encontrado.")
 
-        print("Lote não encontrado.")
-
-
-    # vender produto
-    def vender_produto(self, nome_produto, quantidade):
-
-        atual = self.inicio
-
-        while atual is not None and quantidade > 0:
-
-            if atual.produto.nome == nome_produto and atual.quantidade > 0:
-
-                if atual.quantidade >= quantidade:
-
-                    atual.quantidade -= quantidade
-                    quantidade = 0
-
-                else:
-
-                    quantidade -= atual.quantidade
-                    atual.quantidade = 0
-
-            atual = atual.proximo
-
-
-        if quantidade == 0:
-
-            print("Venda realizada.")
-
-        else:
-
-            print("Estoque insuficiente.")
-
-
-    # listar estoque
+    # -------------------------------------------------------
+    # LISTAGEM: todos os lotes com tabulate
+    # -------------------------------------------------------
     def listar_estoque(self):
 
-        print("\n===== ESTOQUE =====")
-
+        linhas = []
         atual = self.inicio
 
-        while atual is not None:
-
-            print(atual)
-
+        while atual:
+            dias = atual.dias_para_vencer()
+            status = "VENCIDO" if atual.esta_vencido() else (
+                "⚠ VENCENDO" if dias <= 7 else "OK"
+            )
+            linhas.append([
+                atual.id_lote,
+                atual.produto.nome,
+                atual.quantidade,
+                atual.data_validade.strftime("%d/%m/%Y"),
+                f"{dias}d",
+                status,
+                f"R$ {atual.produto.preco_venda:.2f}",
+            ])
             atual = atual.proximo
 
+        if not linhas:
+            print("Estoque vazio.")
+            return
 
+        print("\n" + tabulate(
+            linhas,
+            headers=["Lote", "Produto", "Qtd", "Validade", "Vence em", "Status", "Preço venda"],
+            tablefmt="rounded_outline"
+        ))
 
-# =========================
-# SIMULAÇÃO DO SISTEMA
-# =========================
-if __name__ == "__main__":
+    # -------------------------------------------------------
+    # ALERTA: produtos que vencem nos próximos N dias
+    # -------------------------------------------------------
+    def alertar_vencendo(self, dias=7):
 
+        linhas = []
+        atual = self.inicio
 
-    # =========================
-    # PRODUTOS
-    # =========================
+        while atual:
+            d = atual.dias_para_vencer()
+            if 0 <= d <= dias and atual.quantidade > 0:
+                linhas.append([
+                    atual.id_lote,
+                    atual.produto.nome,
+                    atual.quantidade,
+                    atual.data_validade.strftime("%d/%m/%Y"),
+                    f"{d}d",
+                ])
+            atual = atual.proximo
 
-    hittnuts = Produto("Hitt Nuts", 1.50, 3.00)
-    pao_mel = Produto("Pão de Mel", 1.80, 3.00)
-    balabon = Produto("Bala Bon", 0.80, 1.50)
-    pacoca = Produto("Paçoca", 0.80, 1.50)
-    trento = Produto("Trento", 1.50, 3.00)
-    kitkat = Produto("KitKat", 2.50, 4.00)
+        if not linhas:
+            print(f"\nNenhum produto vencendo nos próximos {dias} dias.")
+            return
 
-    amendoim = Produto("Amendoim Japonês", 1.50, 3.00)
-    chips = Produto("Chips", 2.50, 4.50)
-    salgadinho = Produto("Salgadinho", 2.00, 3.50)
+        print(f"\n⚠  PRODUTOS VENCENDO EM ATÉ {dias} DIAS:")
+        print(tabulate(
+            linhas,
+            headers=["Lote", "Produto", "Qtd", "Validade", "Faltam"],
+            tablefmt="rounded_outline"
+        ))
 
-    coca = Produto("Coca-Cola Lata", 3.50, 5.00)
-    guarana = Produto("Guaraná Lata", 3.50, 5.00)
-    fanta = Produto("Fanta Lata", 3.50, 5.00)
+    # -------------------------------------------------------
+    # LISTAGEM: produtos com saldo > 0 (para menu de venda)
+    # -------------------------------------------------------
+    def listar_produtos_disponiveis(self):
 
-    agua = Produto("Água Mineral", 1.50, 3.00)
-    h2o = Produto("H2O", 3.50, 5.50)
-    energetico = Produto("Energético", 5.00, 8.00)
+        vistos = {}
+        atual = self.inicio
 
+        while atual:
+            if atual.quantidade > 0 and atual.produto.nome not in vistos:
+                vistos[atual.produto.nome] = atual.produto
+            atual = atual.proximo
 
-    # =========================
-    # LOTES
-    # =========================
-
-    lote1 = Lote(1, hittnuts, date(2026,3,10), date(2026,5,1), 50)
-    lote2 = Lote(2, pao_mel, date(2026,3,12), date(2026,4,15), 20)
-    lote3 = Lote(3, hittnuts, date(2026,3,15), date(2026,4,20), 30)
-    lote4 = Lote(4, balabon, date(2026,3,18), date(2026,7,1), 60)
-
-    lote5 = Lote(5, pacoca, date(2026,3,10), date(2026,6,1), 40)
-    lote6 = Lote(6, trento, date(2026,3,10), date(2026,6,1), 30)
-    lote7 = Lote(7, kitkat, date(2026,3,10), date(2026,6,1), 25)
-
-    lote8 = Lote(8, amendoim, date(2026,3,10), date(2026,6,1), 35)
-    lote9 = Lote(9, chips, date(2026,3,10), date(2026,6,1), 20)
-    lote10 = Lote(10, salgadinho, date(2026,3,10), date(2026,6,1), 20)
-
-    lote11 = Lote(11, coca, date(2026,3,10), date(2026,6,1), 40)
-    lote12 = Lote(12, guarana, date(2026,3,10), date(2026,6,1), 30)
-    lote13 = Lote(13, fanta, date(2026,3,10), date(2026,6,1), 25)
-
-    lote14 = Lote(14, agua, date(2026,3,10), date(2026,6,1), 50)
-    lote15 = Lote(15, h2o, date(2026,3,10), date(2026,6,1), 20)
-    lote16 = Lote(16, energetico, date(2026,3,10), date(2026,6,1), 15)
-
-
-    # =========================
-    # CRIAR ESTOQUE
-    # =========================
-
-    estoque = Estoque()
-
-    estoque.adicionar_lote(lote1)
-    estoque.adicionar_lote(lote2)
-    estoque.adicionar_lote(lote3)
-    estoque.adicionar_lote(lote4)
-
-    estoque.adicionar_lote(lote5)
-    estoque.adicionar_lote(lote6)
-    estoque.adicionar_lote(lote7)
-
-    estoque.adicionar_lote(lote8)
-    estoque.adicionar_lote(lote9)
-    estoque.adicionar_lote(lote10)
-
-    estoque.adicionar_lote(lote11)
-    estoque.adicionar_lote(lote12)
-    estoque.adicionar_lote(lote13)
-
-    estoque.adicionar_lote(lote14)
-    estoque.adicionar_lote(lote15)
-    estoque.adicionar_lote(lote16)
-
-
-    # =========================
-    # MOSTRAR ESTOQUE
-    # =========================
-
-    estoque.listar_estoque()
+        return list(vistos.values())
